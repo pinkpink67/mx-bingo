@@ -6,137 +6,451 @@
     <title>MX BINGO</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        /* ... (existing CSS remains the same) ... */
-
-        /* New styles for background upload feature */
-        .background-upload-section {
-            margin-top: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .background-upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 12px;
+            --shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: var(--light);
+            min-height: 100vh;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* Container */
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Game Header - Player Screen */
+        .game-header {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
-            padding: 30px;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: var(--transition);
+            padding: 15px 20px;
             margin-bottom: 20px;
-        }
-
-        .background-upload-area:hover {
-            border-color: #FF6B35;
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .background-upload-area i {
-            font-size: 3rem;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 15px;
-        }
-
-        .background-upload-area p {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 10px;
-        }
-
-        .background-upload-area small {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.85rem;
-        }
-
-        #backgroundUploadInput {
-            display: none;
-        }
-
-        .background-preview {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-
-        .background-item {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: var(--transition);
-            border: 2px solid transparent;
-            aspect-ratio: 16/9;
-        }
-
-        .background-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .background-item.active {
-            border-color: #FF6B35;
-            box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.5);
-        }
-
-        .background-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .background-item-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .background-item-name {
-            color: white;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 70px;
+        .game-header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
         }
 
-        .background-item-delete {
-            background: rgba(239, 71, 111, 0.8);
+        .game-header-title {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #FF6B35, #FFD166);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .game-player-name {
+            font-size: 35px;
+            font-weight: 600;
             color: white;
-            border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            cursor: pointer;
+            text-transform: capitalize;
+            line-height: 1.2;
+        }
+
+        .game-lucky-number {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 12px 16px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            min-width: 90px;
+            text-align: center;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Admin Header */
+        .admin-header {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 15px 20px;
+            margin-bottom: 20px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            transition: var(--transition);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .background-item-delete:hover {
-            background: #EF476F;
-            transform: scale(1.1);
+        .admin-header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #FF6B35, #FFD166);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
         }
 
-        .background-selection {
+        /* Login Screen */
+        .login-screen {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 30px 25px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .login-screen h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        /* Welcome text line styling */
+        .welcome-line {
+            display: block;
+            line-height: 1.4;
+        }
+
+        .input-group {
             margin-bottom: 20px;
         }
 
-        .background-selection label {
+        .input-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
             color: rgba(255, 255, 255, 0.8);
         }
 
-        .background-selection select {
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #FF6B35;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF6B35, #FF9E6D);
+            color: white;
+            box-shadow: 0 6px 0 rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-primary:hover, .btn-primary:active {
+            background: linear-gradient(135deg, #E55A2E, #FF8B5A);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 rgba(255, 107, 53, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover, .btn-secondary:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #118AB2, #06D6A0);
+            color: white;
+            box-shadow: 0 6px 0 rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-info:hover, .btn-info:active {
+            background: linear-gradient(135deg, #0F7A9C, #05C18F);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #EF476F, #FF9E6D);
+            color: white;
+            box-shadow: 0 6px 0 rgba(239, 71, 111, 0.3);
+        }
+
+        .btn-danger:hover, .btn-danger:active {
+            background: linear-gradient(135deg, #D43F63, #FF8B5A);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 rgba(239, 71, 111, 0.3);
+        }
+
+        .btn-small {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            width: auto;
+        }
+
+        /* Card Container */
+        .card-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bingo-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h3 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .card-header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Bingo Grid */
+        .bingo-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 0 auto;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            user-select: none;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .cell:hover, .cell:active {
+            background: rgba(255, 255, 255, 0.12);
+            transform: scale(1.03);
+        }
+
+        .cell.marked {
+            background: linear-gradient(135deg, #06D6A0, #118AB2);
+            color: white;
+            box-shadow: 0 6px 0 rgba(6, 214, 160, 0.3);
+        }
+
+        .cell.free {
+            background: linear-gradient(135deg, #FFD166, #FF9E6D);
+            color: #1a1a2e;
+            font-weight: 800;
+        }
+
+        /* Card Navigation */
+        .card-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .card-nav button {
+            flex: 1;
+        }
+
+        .card-indicator {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        /* Custom Confirmation Modal */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .confirmation-dialog {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .confirmation-icon {
+            font-size: 3rem;
+            color: #EF476F;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-message {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .confirmation-buttons .btn {
+            flex: 1;
+            margin: 0;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .admin-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-section h3 {
+            color: #06D6A0;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-section h3 i {
+            font-size: 1.1rem;
+        }
+
+        .admin-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .control-group input, .control-group select, .control-group textarea {
             width: 100%;
             padding: 12px 15px;
             border-radius: var(--border-radius);
@@ -148,94 +462,852 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        .background-selection select:focus {
+        .control-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .control-group input:focus, .control-group select:focus, .control-group textarea:focus {
             outline: none;
             border-color: #FF6B35;
         }
 
-        .background-type-selector {
-            display: flex;
-            gap: 10px;
+        /* Welcome text customization panel */
+        .welcome-line-controls {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .welcome-line-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
             margin-bottom: 15px;
         }
 
-        .background-type-btn {
+        .welcome-line-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .welcome-line-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .welcome-line-header h4 {
+            color: #FF6B35;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .welcome-line-control-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .welcome-line-control-row .control-group {
             flex: 1;
-            padding: 10px;
+            margin-bottom: 0;
+            min-width: 120px;
+        }
+
+        .welcome-line-control-row .control-group.text-control {
+            flex: 2;
+        }
+
+        .welcome-line-preview {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
             text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--border-radius);
-            color: rgba(255, 255, 255, 0.7);
+            border: 1px dashed #FF6B35;
+        }
+
+        .preview-line {
+            display: block;
+            text-align: center;
+        }
+
+        /* Color picker styles */
+        .color-picker-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .color-preview {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             cursor: pointer;
-            transition: var(--transition);
+            background: #4361ee;
         }
 
-        .background-type-btn.active {
-            background: #FF6B35;
+        .color-input {
+            flex: 1;
+        }
+
+        .color-input input {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
             color: white;
-            border-color: #FF6B35;
+            font-size: 0.9rem;
+            text-align: center;
         }
 
-        .upload-progress {
+        /* Color palette */
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
             margin-top: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
+        }
+
+        .color-swatch {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        /* Player List Management */
+        .player-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .player-count {
+            background: rgba(255, 107, 53, 0.2);
+            color: #FF6B35;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .player-list-editor {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .player-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .player-list-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .player-list-item input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 8px;
+            font-size: 0.95rem;
+        }
+
+        .player-list-item input:focus {
+            outline: none;
+        }
+
+        .player-list-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .player-list-controls button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player-list-controls button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .player-list-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* Registered Players Table */
+        .registered-players-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--border-radius);
             overflow: hidden;
-            height: 10px;
-            display: none;
         }
 
-        .upload-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #FF6B35, #FFD166);
-            width: 0%;
-            transition: width 0.3s ease;
+        .registered-players-table th {
+            background: rgba(255, 107, 53, 0.3);
+            color: #FF6B35;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .no-backgrounds-message {
+        .registered-players-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+        }
+
+        .registered-players-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .registered-players-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .player-number {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            width: 30px;
+        }
+
+        .player-name-cell {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .player-lucky-number {
+            font-weight: 700;
+            color: #06D6A0;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .player-date {
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+        }
+
+        .player-time {
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+        }
+
+        .no-players-message {
             text-align: center;
             padding: 30px;
             color: rgba(255, 255, 255, 0.5);
             font-style: italic;
         }
 
-        /* Netlify form styles */
-        .netlify-form {
+        /* Export Options */
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        /* Import Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #06D6A0;
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .modal-textarea:focus {
+            outline: none;
+            border-color: #FF6B35;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .duplicate-warning {
+            background: rgba(239, 71, 111, 0.2);
+            border: 1px solid rgba(239, 71, 111, 0.3);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            color: #EF476F;
+            font-size: 0.9rem;
+        }
+
+        .duplicate-warning ul {
+            margin-top: 8px;
+            padding-left: 20px;
+        }
+
+        .duplicate-warning li {
+            margin-bottom: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tab.active {
+            background: #FF6B35;
+            color: white;
+        }
+
+        .tab-content {
             display: none;
         }
 
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 15px 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            max-width: 90%;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            border-left: 5px solid #06D6A0;
+        }
+
+        .notification.error {
+            border-left: 5px solid #EF476F;
+        }
+
+        @keyframes slideIn {
+            from { top: -100px; opacity: 0; }
+            to { top: 20px; opacity: 1; }
+        }
+
+        /* Game Status */
+        .game-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-active {
+            background: rgba(6, 214, 160, 0.2);
+            color: #06D6A0;
+        }
+
+        .status-inactive {
+            background: rgba(108, 117, 125, 0.2);
+            color: var(--gray);
+        }
+
+        /* Responsive Adjustments */
         @media (max-width: 480px) {
-            .background-preview {
-                grid-template-columns: repeat(2, 1fr);
+            .container {
+                padding: 15px;
             }
             
-            .background-item {
-                aspect-ratio: 4/3;
+            .admin-header h1, .game-header-title {
+                font-size: 1.5rem;
             }
+            
+            .game-player-name {
+                font-size: 28px;
+            }
+            
+            .game-lucky-number {
+                padding: 10px 14px;
+                font-size: 1.1rem;
+                min-width: 80px;
+            }
+            
+            .cell {
+                font-size: 1rem;
+            }
+            
+            .admin-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-nav {
+                gap: 8px;
+            }
+            
+            .card-nav button {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            
+            .registered-players-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .registered-players-table th,
+            .registered-players-table td {
+                padding: 8px 6px;
+                font-size: 0.8rem;
+            }
+            
+            .confirmation-dialog {
+                padding: 20px;
+            }
+            
+            .confirmation-message {
+                font-size: 1.1rem;
+            }
+            
+            .color-palette {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .welcome-line-control-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Hide elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #FF6B35;
+            animation: spin 1s ease-in-out infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <!-- ... (existing HTML remains the same until admin panel) ... -->
+    <div class="container">
+        <!-- Admin Header -->
+        <div class="admin-header hidden" id="adminHeader">
+            <h1 id="headerTitle">MX BINGO</h1>
+        </div>
 
-    <!-- Admin Panel -->
-    <div class="admin-panel hidden" id="adminPanel">
-        <!-- Settings Tab -->
-        <div class="tab-content active" id="settingsTab">
-            <!-- ... (existing sections remain the same) ... -->
-            
-            <div class="admin-section">
-                <h3><i class="fas fa-palette"></i> Background Settings</h3>
-                
-                <!-- Background Type Selector -->
-                <div class="background-type-selector">
-                    <div class="background-type-btn active" data-type="color">Color</div>
-                    <div class="background-type-btn" data-type="image">Image</div>
+        <!-- Game Header - Player Screen -->
+        <div class="game-header hidden" id="gameHeader">
+            <div class="game-header-center">
+                <div class="game-player-name" id="gamePlayerName">Player Name</div>
+            </div>
+            <div class="game-lucky-number" id="gameLuckyNumber">1234</div>
+        </div>
+
+        <!-- Tabs for Admin -->
+        <div class="tabs hidden" id="adminTabs">
+            <div class="tab active" data-tab="settings">Settings</div>
+            <div class="tab" data-tab="players">Players</div>
+            <div class="tab" data-tab="preview">Preview</div>
+        </div>
+
+        <!-- Game Status Indicator -->
+        <div class="game-status hidden" id="gameStatus">
+            <div class="status-indicator status-inactive" id="statusIndicator">
+                <i class="fas fa-circle"></i>
+                <span>Game Not Active</span>
+            </div>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="login-screen" id="loginScreen">
+            <h2 id="welcomeText">
+                <span class="welcome-line" id="welcomeLine1">Welcome to</span>
+                <span class="welcome-line" id="welcomeLine2">MX</span>
+                <span class="welcome-line" id="welcomeLine3">BINGO!</span>
+            </h2>
+            <div class="input-group">
+                <label for="playerName">Player Name</label>
+                <input type="text" id="playerName" placeholder="Enter your name">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+            <button class="btn btn-primary" id="loginBtn">Login</button>
+        </div>
+
+        <!-- Player Game Screen -->
+        <div class="card-container hidden" id="playerScreen">
+            <div class="bingo-card">
+                <div class="card-header">
+                    <h3 id="cardTitle">BINGO CARD 1/3</h3>
                 </div>
                 
-                <!-- Color Background Settings (existing) -->
-                <div id="colorBackgroundSettings">
+                <div class="bingo-grid" id="bingoGrid">
+                    <!-- Cells will be generated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="card-nav">
+                <button class="btn btn-secondary btn-small" id="prevCardBtn">
+                    <i class="fas fa-chevron-left"></i> Back
+                </button>
+                <button class="btn btn-danger btn-small" id="clearCardBtn">
+                    <i class="fas fa-eraser"></i> Clear Card
+                </button>
+                <button class="btn btn-secondary btn-small" id="nextCardBtn">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="admin-panel hidden" id="adminPanel">
+            <!-- Settings Tab -->
+            <div class="tab-content active" id="settingsTab">
+                <div class="admin-section">
+                    <h3><i class="fas fa-users"></i> Game Settings</h3>
+                    <div class="admin-controls">
+                        <div class="control-group">
+                            <label for="maxPlayers">Max Players (1-100)</label>
+                            <input type="number" id="maxPlayers" min="1" max="100" value="50">
+                        </div>
+                        <div class="control-group">
+                            <label for="cardsPerPlayer">Cards Per Player (1-10)</label>
+                            <input type="number" id="cardsPerPlayer" min="1" max="10" value="3">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="gameActive">Game Status</label>
+                        <select id="gameActive">
+                            <option value="false">Not Active / Join Closed</option>
+                            <option value="true">Active / Join Open</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3><i class="fas fa-user-shield"></i> Admin Credentials</h3>
+                    <div class="admin-controls">
+                        <div class="control-group">
+                            <label for="adminId">Admin ID</label>
+                            <input type="text" id="adminId" value="admin">
+                        </div>
+                        <div class="control-group">
+                            <label for="adminPassword">Admin Password</label>
+                            <input type="password" id="adminPassword" value="1234">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3><i class="fas fa-palette"></i> Text Customization</h3>
+                    <div class="control-group">
+                        <label for="headerText">Header Title</label>
+                        <input type="text" id="headerText" value="MX BINGO">
+                    </div>
+                    
+                    <!-- Welcome Text Customization - 3 Lines with Text Content -->
+                    <div class="welcome-line-controls">
+                        <h4 style="color: #FF6B35; margin-bottom: 15px;">Welcome Text - Line 1</h4>
+                        <div class="welcome-line-item">
+                            <div class="welcome-line-header">
+                                <h4>Line 1 Settings</h4>
+                            </div>
+                            <div class="welcome-line-control-row">
+                                <div class="control-group text-control">
+                                    <label>Text</label>
+                                    <input type="text" id="welcomeLine1Text" value="Welcome to" placeholder="Enter line 1 text">
+                                </div>
+                            </div>
+                            <div class="welcome-line-control-row">
+                                <div class="control-group">
+                                    <label>Color</label>
+                                    <div class="color-picker-container">
+                                        <div class="color-preview" id="welcomeLine1ColorPreview" style="background: #ffffff;"></div>
+                                        <div class="color-input">
+                                            <input type="text" id="welcomeLine1ColorInput" value="#ffffff" readonly>
+                                        </div>
+                                    </div>
+                                    <input type="color" id="welcomeLine1ColorPicker" value="#ffffff" style="display: none;">
+                                </div>
+                                <div class="control-group">
+                                    <label>Font Size (px)</label>
+                                    <input type="number" id="welcomeLine1Size" min="10" max="100" value="28">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: #FF6B35; margin: 20px 0 15px;">Welcome Text - Line 2</h4>
+                        <div class="welcome-line-item">
+                            <div class="welcome-line-header">
+                                <h4>Line 2 Settings</h4>
+                            </div>
+                            <div class="welcome-line-control-row">
+                                <div class="control-group text-control">
+                                    <label>Text</label>
+                                    <input type="text" id="welcomeLine2Text" value="MX" placeholder="Enter line 2 text">
+                                </div>
+                            </div>
+                            <div class="welcome-line-control-row">
+                                <div class="control-group">
+                                    <label>Color</label>
+                                    <div class="color-picker-container">
+                                        <div class="color-preview" id="welcomeLine2ColorPreview" style="background: #FF6B35;"></div>
+                                        <div class="color-input">
+                                            <input type="text" id="welcomeLine2ColorInput" value="#FF6B35" readonly>
+                                        </div>
+                                    </div>
+                                    <input type="color" id="welcomeLine2ColorPicker" value="#FF6B35" style="display: none;">
+                                </div>
+                                <div class="control-group">
+                                    <label>Font Size (px)</label>
+                                    <input type="number" id="welcomeLine2Size" min="10" max="100" value="42">
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: #FF6B35; margin: 20px 0 15px;">Welcome Text - Line 3</h4>
+                        <div class="welcome-line-item">
+                            <div class="welcome-line-header">
+                                <h4>Line 3 Settings</h4>
+                            </div>
+                            <div class="welcome-line-control-row">
+                                <div class="control-group text-control">
+                                    <label>Text</label>
+                                    <input type="text" id="welcomeLine3Text" value="BINGO!" placeholder="Enter line 3 text">
+                                </div>
+                            </div>
+                            <div class="welcome-line-control-row">
+                                <div class="control-group">
+                                    <label>Color</label>
+                                    <div class="color-picker-container">
+                                        <div class="color-preview" id="welcomeLine3ColorPreview" style="background: #06D6A0;"></div>
+                                        <div class="color-input">
+                                            <input type="text" id="welcomeLine3ColorInput" value="#06D6A0" readonly>
+                                        </div>
+                                    </div>
+                                    <input type="color" id="welcomeLine3ColorPicker" value="#06D6A0" style="display: none;">
+                                </div>
+                                <div class="control-group">
+                                    <label>Font Size (px)</label>
+                                    <input type="number" id="welcomeLine3Size" min="10" max="100" value="32">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Preview -->
+                        <div class="welcome-line-preview">
+                            <label style="color: rgba(255,255,255,0.7); margin-bottom: 10px; display: block;">Live Preview:</label>
+                            <div id="welcomePreview">
+                                <span class="preview-line" id="previewLine1" style="color: #ffffff; font-size: 28px;">Welcome to</span>
+                                <span class="preview-line" id="previewLine2" style="color: #FF6B35; font-size: 42px;">MX</span>
+                                <span class="preview-line" id="previewLine3" style="color: #06D6A0; font-size: 32px;">BINGO!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="cardTitleText">Card Title Format</label>
+                        <input type="text" id="cardTitleText" value="GAME CARD {current}/{total}">
+                        <small style="color: rgba(255, 255, 255, 0.6); font-size: 0.85rem;">
+                            Use {current} for current card number and {total} for total cards
+                        </small>
+                    </div>
+                    <div class="control-group">
+                        <label for="generalPassword">General Password (for all players)</label>
+                        <input type="text" id="generalPassword" value="bingo123">
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3><i class="fas fa-palette"></i> Player Name Design</h3>
+                    <div class="control-group">
+                        <label>Player Name Color</label>
+                        <div class="color-picker-container">
+                            <div class="color-preview" id="playerNameColorPreview" style="background: #ffffff;"></div>
+                            <div class="color-input">
+                                <input type="text" id="playerNameColorInput" value="#ffffff" readonly>
+                            </div>
+                        </div>
+                        <input type="color" id="playerNameColorPicker" value="#ffffff" style="display: none;">
+                        <div class="color-palette" id="playerNameColorPalette"></div>
+                    </div>
+                    <div class="control-group">
+                        <label for="playerNameSize">Player Name Font Size (px)</label>
+                        <input type="number" id="playerNameSize" min="10" max="50" value="35">
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3><i class="fas fa-palette"></i> Cell Design Settings</h3>
+                    <div class="control-group">
+                        <label>Cell Background Color</label>
+                        <div class="color-picker-container">
+                            <div class="color-preview" id="cellColorPreview" style="background: #4361ee;"></div>
+                            <div class="color-input">
+                                <input type="text" id="cellColorInput" value="#4361ee" readonly>
+                            </div>
+                        </div>
+                        <input type="color" id="cellColorPicker" value="#4361ee" style="display: none;">
+                        <div class="color-palette" id="cellColorPalette"></div>
+                    </div>
+                    <div class="control-group">
+                        <label>Cell Number Color</label>
+                        <div class="color-picker-container">
+                            <div class="color-preview" id="cellNumberColorPreview" style="background: #ffffff;"></div>
+                            <div class="color-input">
+                                <input type="text" id="cellNumberColorInput" value="#ffffff" readonly>
+                            </div>
+                        </div>
+                        <input type="color" id="cellNumberColorPicker" value="#ffffff" style="display: none;">
+                        <div class="color-palette" id="cellNumberColorPalette"></div>
+                    </div>
+                    
+                    <div class="admin-controls">
+                        <div class="control-group">
+                            <label for="cellNumberSize">Cell Number Font Size (px)</label>
+                            <input type="number" id="cellNumberSize" min="8" max="30" value="16">
+                        </div>
+                        <div class="control-group">
+                            <label for="cellSpacing">Cell Spacing (px)</label>
+                            <input type="number" id="cellSpacing" min="0" max="20" value="8">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="cellBorder">Cell Border</label>
+                        <input type="text" id="cellBorder" placeholder="2px solid #4361ee" value="2px solid #4361ee">
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3><i class="fas fa-palette"></i> Background Settings</h3>
                     <div class="control-group">
                         <label>Background Color</label>
                         <div class="color-picker-container">
@@ -249,68 +1321,135 @@
                     </div>
                 </div>
                 
-                <!-- Image Background Settings (new) -->
-                <div id="imageBackgroundSettings" style="display: none;">
-                    <!-- Background Image Upload -->
-                    <div class="background-upload-section">
-                        <div class="background-upload-area" id="backgroundUploadArea">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Click to upload background image</p>
-                            <small>Recommended size: 1920x1080px (16:9 ratio)<br>
-                            Max file size: 5MB<br>
-                            Supported formats: JPG, PNG, GIF, WebP</small>
-                            <input type="file" id="backgroundUploadInput" accept="image/*">
+                <button class="btn btn-primary" id="saveSettingsBtn">
+                    <i class="fas fa-save"></i> Save All Settings
+                </button>
+                <button class="btn btn-secondary" id="resetPlayersBtn">
+                    <i class="fas fa-trash"></i> Reset All Players
+                </button>
+            </div>
+            
+            <!-- Players Tab -->
+            <div class="tab-content" id="playersTab">
+                <div class="admin-section">
+                    <div class="player-list-header">
+                        <h3><i class="fas fa-list"></i> Player List Management</h3>
+                        <div class="player-count" id="playerCount">0 players</div>
+                    </div>
+                    
+                    <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; font-size: 0.9rem;">
+                        Add players who are allowed to join. Each player will be automatically assigned a 4-digit lucky number.
+                        <br><br>
+                        <strong>Format for import:</strong> Names separated by commas. Example: "calvin, cindy, JF, 何明明, 何美美"
+                    </p>
+                    
+                    <div class="player-list-editor" id="playerListEditor">
+                        <!-- Player list items will be added here -->
+                    </div>
+                    
+                    <div class="player-list-actions">
+                        <button class="btn btn-secondary btn-small" id="addPlayerBtn">
+                            <i class="fas fa-plus"></i> Add Player
+                        </button>
+                        <button class="btn btn-secondary btn-small" id="importPlayersBtn">
+                            <i class="fas fa-file-import"></i> Import List
+                        </button>
+                        <button class="btn btn-info btn-small" id="exportPlayersBtn">
+                            <i class="fas fa-file-export"></i> Export List
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="admin-section">
+                    <div class="player-list-header">
+                        <h3><i class="fas fa-users"></i> Registered Players</h3>
+                        <div class="export-options">
+                            <button class="btn btn-secondary btn-small" id="exportNamesBtn">
+                                <i class="fas fa-file-export"></i> Names Only
+                            </button>
+                            <button class="btn btn-info btn-small" id="exportFullBtn">
+                                <i class="fas fa-file-excel"></i> Full Details
+                            </button>
                         </div>
-                        
-                        <!-- Upload Progress -->
-                        <div class="upload-progress" id="uploadProgress">
-                            <div class="upload-progress-bar" id="uploadProgressBar"></div>
-                        </div>
-                        
-                        <!-- Background Image Selection -->
-                        <div class="background-selection">
-                            <label>Select Background Image</label>
-                            <select id="backgroundImageSelect">
-                                <option value="">No background image</option>
-                                <!-- Options will be populated by JavaScript -->
-                            </select>
-                        </div>
-                        
-                        <!-- Background Images Preview -->
-                        <div class="background-preview" id="backgroundPreview">
-                            <!-- Background items will be added here -->
-                        </div>
+                    </div>
+                    
+                    <div id="registeredPlayersTableContainer">
+                        <!-- Registered players table will be populated here -->
                     </div>
                 </div>
             </div>
             
-            <!-- ... (rest of existing admin panel remains the same) ... -->
+            <!-- Preview Tab -->
+            <div class="tab-content" id="previewTab">
+                <div class="admin-section">
+                    <h3><i class="fas fa-eye"></i> Card Preview</h3>
+                    <div class="bingo-grid" id="previewGrid">
+                        <!-- Preview cells will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-secondary" id="adminLogoutBtn">Logout</button>
         </div>
-        
-        <!-- ... (rest of existing HTML remains the same) ... -->
+
+        <!-- Import Modal -->
+        <div class="modal-overlay hidden" id="importModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Import Player List</h3>
+                </div>
+                <div class="modal-body">
+                    <div id="duplicateWarning" class="duplicate-warning hidden"></div>
+                    <textarea id="importTextarea" class="modal-textarea" placeholder="Enter names separated by commas (e.g., calvin, cindy, JF, 何明明, 何美美)"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-small" id="cancelImportBtn">Cancel</button>
+                    <button class="btn btn-primary btn-small" id="proceedImportBtn">Proceed (Skip Duplicates)</button>
+                    <button class="btn btn-danger btn-small" id="cancelAllImportBtn">Cancel All</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Confirmation Modal -->
+        <div class="confirmation-modal hidden" id="confirmationModal">
+            <div class="confirmation-dialog">
+                <div class="confirmation-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="confirmation-message" id="confirmationMessage">
+                    Clear all marks from this card? This cannot be undone.
+                </div>
+                <div class="confirmation-buttons">
+                    <button class="btn btn-secondary" id="confirmCancelBtn">Cancel</button>
+                    <button class="btn btn-danger" id="confirmClearBtn">Clear Card</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- ... (existing modals and notifications remain the same) ... -->
-
-    <!-- Netlify Form (hidden, for background upload) -->
-    <form class="netlify-form" id="backgroundUploadForm" name="background-upload" method="POST" enctype="multipart/form-data" data-netlify="true">
-        <input type="file" name="background-image" id="netlifyUploadInput">
-        <input type="hidden" name="form-name" value="background-upload">
-        <input type="hidden" name="admin-secret" id="adminSecret" value="">
-        <button type="submit" id="netlifySubmitBtn">Submit</button>
-    </form>
+    <!-- Notification -->
+    <div class="notification hidden" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Settings saved successfully!</span>
+    </div>
 
     <script>
         // ===========================================
-        // NETLIFY CONFIGURATION FOR MX BINGO
+        // FIREBASE CONFIGURATION FOR MX BINGO
         // ===========================================
-        
-        // Since we're using Netlify, we'll store data in:
-        // 1. Netlify Forms for background image uploads
-        // 2. LocalStorage for settings (or consider using Netlify Functions for a database)
-        
-        // For production, you should set up Netlify Functions and a database like FaunaDB
-        // For simplicity in this example, we'll use LocalStorage and Netlify Forms
+        const firebaseConfig = {
+            apiKey: "AIzaSyB01PdqxQOdevXQNcYJMGzuYmG1u-S77ec",
+            authDomain: "mx-bingo.firebaseapp.com",
+            databaseURL: "https://mx-bingo-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "mx-bingo",
+            storageBucket: "mx-bingo.firebasestorage.app",
+            messagingSenderId: "480388469034",
+            appId: "1:480388469034:web:a6edab28faf37e3e0c4e53"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         // App state
         let currentUser = null;
@@ -327,10 +1466,16 @@
             cellSpacing: 8,
             cellBorder: "2px solid #4361ee",
             bgColor: "#1a1a2e",
-            bgType: "color", // "color" or "image"
-            bgImage: "", // URL of selected background image
             headerText: "MX BINGO",
-            welcomeText: "Welcome to MX BINGO!",
+            welcomeLine1Text: "Welcome to",
+            welcomeLine1Color: "#ffffff",
+            welcomeLine1Size: 28,
+            welcomeLine2Text: "MX",
+            welcomeLine2Color: "#FF6B35",
+            welcomeLine2Size: 42,
+            welcomeLine3Text: "BINGO!",
+            welcomeLine3Color: "#06D6A0",
+            welcomeLine3Size: 32,
             cardTitleText: "GAME CARD {current}/{total}",
             generalPassword: "bingo123",
             adminId: "admin",
@@ -340,445 +1485,1332 @@
             allowedPlayers: []
         };
 
-        // Background images storage
-        let backgroundImages = [];
+        // Predefined color palettes
+        const colorPalettes = {
+            cellColors: [
+                "#4361ee", "#3a56d4", "#7209b7", "#f72585", "#4cc9f0",
+                "#06D6A0", "#118AB2", "#EF476F", "#FFD166", "#FF9E6D",
+                "#8338ec", "#3a86ff", "#fb5607", "#ff006e", "#ffbe0b"
+            ],
+            textColors: [
+                "#ffffff", "#000000", "#f8f9fa", "#e9ecef", "#dee2e6",
+                "#ced4da", "#adb5bd", "#6c757d", "#495057", "#343a40",
+                "#212529", "#FF6B35", "#06D6A0", "#118AB2", "#EF476F"
+            ],
+            bgColors: [
+                "#1a1a2e", "#16213e", "#0f3460", "#1b1b2f", "#1f4068",
+                "#212529", "#343a40", "#495057", "#6c757d", "#adb5bd",
+                "#dee2e6", "#e9ecef", "#f8f9fa", "#ffffff", "#000000"
+            ]
+        };
 
-        // DOM Elements for new background feature
-        const backgroundUploadArea = document.getElementById('backgroundUploadArea');
-        const backgroundUploadInput = document.getElementById('backgroundUploadInput');
-        const uploadProgress = document.getElementById('uploadProgress');
-        const uploadProgressBar = document.getElementById('uploadProgressBar');
-        const backgroundImageSelect = document.getElementById('backgroundImageSelect');
-        const backgroundPreview = document.getElementById('backgroundPreview');
-        const colorBackgroundSettings = document.getElementById('colorBackgroundSettings');
-        const imageBackgroundSettings = document.getElementById('imageBackgroundSettings');
-        const backgroundTypeSelector = document.querySelectorAll('.background-type-btn');
-        const backgroundUploadForm = document.getElementById('backgroundUploadForm');
-        const netlifyUploadInput = document.getElementById('netlifyUploadInput');
-        const adminSecretInput = document.getElementById('adminSecret');
-        const netlifySubmitBtn = document.getElementById('netlifySubmitBtn');
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const playerScreen = document.getElementById('playerScreen');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminHeader = document.getElementById('adminHeader');
+        const gameHeader = document.getElementById('gameHeader');
+        const gamePlayerName = document.getElementById('gamePlayerName');
+        const gameLuckyNumber = document.getElementById('gameLuckyNumber');
+        const bingoGrid = document.getElementById('bingoGrid');
+        const previewGrid = document.getElementById('previewGrid');
+        const cardTitle = document.getElementById('cardTitle');
+        const prevCardBtn = document.getElementById('prevCardBtn');
+        const nextCardBtn = document.getElementById('nextCardBtn');
+        const clearCardBtn = document.getElementById('clearCardBtn');
+        const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const adminTabs = document.getElementById('adminTabs');
+        const gameStatus = document.getElementById('gameStatus');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+        const headerTitle = document.getElementById('headerTitle');
+        const welcomeText = document.getElementById('welcomeText');
+        const welcomeLine1 = document.getElementById('welcomeLine1');
+        const welcomeLine2 = document.getElementById('welcomeLine2');
+        const welcomeLine3 = document.getElementById('welcomeLine3');
+        const previewLine1 = document.getElementById('previewLine1');
+        const previewLine2 = document.getElementById('previewLine2');
+        const previewLine3 = document.getElementById('previewLine3');
+        const playerCount = document.getElementById('playerCount');
+        const registeredPlayersTableContainer = document.getElementById('registeredPlayersTableContainer');
 
-        // Initialize background images from localStorage
-        function loadBackgroundImages() {
-            const storedImages = localStorage.getItem('mxbingo_backgrounds');
-            if (storedImages) {
-                backgroundImages = JSON.parse(storedImages);
-                updateBackgroundSelection();
-            }
+        // Welcome line text inputs
+        const welcomeLine1Text = document.getElementById('welcomeLine1Text');
+        const welcomeLine2Text = document.getElementById('welcomeLine2Text');
+        const welcomeLine3Text = document.getElementById('welcomeLine3Text');
+
+        // Welcome line color pickers
+        const welcomeLine1ColorPreview = document.getElementById('welcomeLine1ColorPreview');
+        const welcomeLine1ColorInput = document.getElementById('welcomeLine1ColorInput');
+        const welcomeLine1ColorPicker = document.getElementById('welcomeLine1ColorPicker');
+        const welcomeLine1Size = document.getElementById('welcomeLine1Size');
+
+        const welcomeLine2ColorPreview = document.getElementById('welcomeLine2ColorPreview');
+        const welcomeLine2ColorInput = document.getElementById('welcomeLine2ColorInput');
+        const welcomeLine2ColorPicker = document.getElementById('welcomeLine2ColorPicker');
+        const welcomeLine2Size = document.getElementById('welcomeLine2Size');
+
+        const welcomeLine3ColorPreview = document.getElementById('welcomeLine3ColorPreview');
+        const welcomeLine3ColorInput = document.getElementById('welcomeLine3ColorInput');
+        const welcomeLine3ColorPicker = document.getElementById('welcomeLine3ColorPicker');
+        const welcomeLine3Size = document.getElementById('welcomeLine3Size');
+
+        // Confirmation modal elements
+        const confirmationModal = document.getElementById('confirmationModal');
+        const confirmationMessage = document.getElementById('confirmationMessage');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const confirmClearBtn = document.getElementById('confirmClearBtn');
+
+        // Admin controls
+        const maxPlayersInput = document.getElementById('maxPlayers');
+        const cardsPerPlayerInput = document.getElementById('cardsPerPlayer');
+        const gameActiveSelect = document.getElementById('gameActive');
+        const cellNumberSizeInput = document.getElementById('cellNumberSize');
+        const cellSpacingInput = document.getElementById('cellSpacing');
+        const cellBorderInput = document.getElementById('cellBorder');
+        const headerTextInput = document.getElementById('headerText');
+        const cardTitleTextInput = document.getElementById('cardTitleText');
+        const generalPasswordInput = document.getElementById('generalPassword');
+        const adminIdInput = document.getElementById('adminId');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        const playerNameSizeInput = document.getElementById('playerNameSize');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const resetPlayersBtn = document.getElementById('resetPlayersBtn');
+        const playerListEditor = document.getElementById('playerListEditor');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const importPlayersBtn = document.getElementById('importPlayersBtn');
+        const exportPlayersBtn = document.getElementById('exportPlayersBtn');
+        const exportNamesBtn = document.getElementById('exportNamesBtn');
+        const exportFullBtn = document.getElementById('exportFullBtn');
+
+        // Color picker elements
+        const playerNameColorPreview = document.getElementById('playerNameColorPreview');
+        const playerNameColorInput = document.getElementById('playerNameColorInput');
+        const playerNameColorPicker = document.getElementById('playerNameColorPicker');
+        const playerNameColorPalette = document.getElementById('playerNameColorPalette');
+        
+        const cellColorPreview = document.getElementById('cellColorPreview');
+        const cellColorInput = document.getElementById('cellColorInput');
+        const cellColorPicker = document.getElementById('cellColorPicker');
+        const cellColorPalette = document.getElementById('cellColorPalette');
+        
+        const cellNumberColorPreview = document.getElementById('cellNumberColorPreview');
+        const cellNumberColorInput = document.getElementById('cellNumberColorInput');
+        const cellNumberColorPicker = document.getElementById('cellNumberColorPicker');
+        const cellNumberColorPalette = document.getElementById('cellNumberColorPalette');
+        
+        const bgColorPreview = document.getElementById('bgColorPreview');
+        const bgColorInput = document.getElementById('bgColorInput');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const bgColorPalette = document.getElementById('bgColorPalette');
+
+        // Import modal elements
+        const importModal = document.getElementById('importModal');
+        const importTextarea = document.getElementById('importTextarea');
+        const duplicateWarning = document.getElementById('duplicateWarning');
+        const cancelImportBtn = document.getElementById('cancelImportBtn');
+        const proceedImportBtn = document.getElementById('proceedImportBtn');
+        const cancelAllImportBtn = document.getElementById('cancelAllImportBtn');
+
+        // Helper functions for color conversion
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 255, g: 255, b: 255 };
         }
 
-        // Save background images to localStorage
-        function saveBackgroundImages() {
-            localStorage.setItem('mxbingo_backgrounds', JSON.stringify(backgroundImages));
+        // Update welcome text styling and content
+        function updateWelcomeTextStyle() {
+            // Update content
+            welcomeLine1.textContent = gameSettings.welcomeLine1Text || "Welcome to";
+            welcomeLine2.textContent = gameSettings.welcomeLine2Text || "MX";
+            welcomeLine3.textContent = gameSettings.welcomeLine3Text || "BINGO!";
+            
+            // Update colors and sizes
+            welcomeLine1.style.color = gameSettings.welcomeLine1Color;
+            welcomeLine1.style.fontSize = gameSettings.welcomeLine1Size + 'px';
+            
+            welcomeLine2.style.color = gameSettings.welcomeLine2Color;
+            welcomeLine2.style.fontSize = gameSettings.welcomeLine2Size + 'px';
+            
+            welcomeLine3.style.color = gameSettings.welcomeLine3Color;
+            welcomeLine3.style.fontSize = gameSettings.welcomeLine3Size + 'px';
+            
+            // Update preview
+            previewLine1.textContent = gameSettings.welcomeLine1Text || "Welcome to";
+            previewLine1.style.color = gameSettings.welcomeLine1Color;
+            previewLine1.style.fontSize = gameSettings.welcomeLine1Size + 'px';
+            
+            previewLine2.textContent = gameSettings.welcomeLine2Text || "MX";
+            previewLine2.style.color = gameSettings.welcomeLine2Color;
+            previewLine2.style.fontSize = gameSettings.welcomeLine2Size + 'px';
+            
+            previewLine3.textContent = gameSettings.welcomeLine3Text || "BINGO!";
+            previewLine3.style.color = gameSettings.welcomeLine3Color;
+            previewLine3.style.fontSize = gameSettings.welcomeLine3Size + 'px';
         }
 
-        // Update background selection dropdown and preview
-        function updateBackgroundSelection() {
-            // Clear existing options (keep the "No background image" option)
-            while (backgroundImageSelect.options.length > 1) {
-                backgroundImageSelect.remove(1);
+        // Custom confirmation dialog
+        function showConfirmationDialog(message) {
+            return new Promise((resolve) => {
+                confirmationMessage.textContent = message;
+                confirmationModal.classList.remove('hidden');
+                
+                confirmCancelBtn.onclick = function() {
+                    confirmationModal.classList.add('hidden');
+                    resolve(false);
+                };
+                
+                confirmClearBtn.onclick = function() {
+                    confirmationModal.classList.add('hidden');
+                    resolve(true);
+                };
+            });
+        }
+
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Update active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show corresponding content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId + 'Tab').classList.add('active');
+            });
+        });
+
+        // Generate a random 4-digit lucky number
+        function generateLuckyNumber() {
+            let number = '';
+            for (let i = 0; i < 4; i++) {
+                number += Math.floor(Math.random() * 10);
+            }
+            return number;
+        }
+
+        // Generate a unique BINGO card with no duplicates across all players
+        async function generateUniqueBingoCard() {
+            let card;
+            let isUnique = false;
+            let attempts = 0;
+            const maxAttempts = 100;
+            
+            while (!isUnique && attempts < maxAttempts) {
+                card = generateBingoCard();
+                
+                // Check if this card already exists for any player
+                const playersRef = database.ref('players');
+                const snapshot = await playersRef.once('value');
+                
+                let cardExists = false;
+                if (snapshot.exists()) {
+                    snapshot.forEach(player => {
+                        const playerData = player.val();
+                        if (playerData.cards) {
+                            playerData.cards.forEach(playerCard => {
+                                if (JSON.stringify(playerCard.numbers) === JSON.stringify(card)) {
+                                    cardExists = true;
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                if (!cardExists) {
+                    isUnique = true;
+                }
+                
+                attempts++;
             }
             
-            // Clear preview
-            backgroundPreview.innerHTML = '';
+            // If we couldn't find a unique card after max attempts, generate any card
+            if (!isUnique) {
+                console.warn('Could not generate unique card after', maxAttempts, 'attempts. Using random card.');
+                card = generateBingoCard();
+            }
             
-            if (backgroundImages.length === 0) {
-                backgroundPreview.innerHTML = '<div class="no-backgrounds-message">No background images uploaded yet</div>';
+            return card;
+        }
+
+        // Generate a BINGO card with random numbers (standard BINGO rules)
+        function generateBingoCard() {
+            const card = [];
+            
+            // B column: 1-15
+            const bNumbers = new Set();
+            while (bNumbers.size < 5) {
+                bNumbers.add(Math.floor(Math.random() * 15) + 1);
+            }
+            card.push(...Array.from(bNumbers));
+            
+            // I column: 16-30
+            const iNumbers = new Set();
+            while (iNumbers.size < 5) {
+                iNumbers.add(Math.floor(Math.random() * 15) + 16);
+            }
+            card.push(...Array.from(iNumbers));
+            
+            // N column: 31-45 (with FREE in the middle)
+            const nNumbers = new Set();
+            while (nNumbers.size < 4) {
+                nNumbers.add(Math.floor(Math.random() * 15) + 31);
+            }
+            const nArray = Array.from(nNumbers);
+            nArray.splice(2, 0, 'FREE');
+            card.push(...nArray);
+            
+            // G column: 46-60
+            const gNumbers = new Set();
+            while (gNumbers.size < 5) {
+                gNumbers.add(Math.floor(Math.random() * 15) + 46);
+            }
+            card.push(...Array.from(gNumbers));
+            
+            // O column: 61-75
+            const oNumbers = new Set();
+            while (oNumbers.size < 5) {
+                oNumbers.add(Math.floor(Math.random() * 15) + 61);
+            }
+            card.push(...Array.from(oNumbers));
+            
+            return card;
+        }
+
+        // Format date and time
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = date.toLocaleString('en-US', { month: 'short' });
+            const year = date.getFullYear();
+            
+            let hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'pm' : 'am';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // Convert 0 to 12
+            
+            return {
+                date: `${day} ${month} ${year}`,
+                time: `${hours}:${minutes}${ampm}`
+            };
+        }
+
+        // Parse comma-separated names - FIXED for Chinese names
+        function parseCommaSeparatedNames(text) {
+            if (!text || text.trim() === '') return [];
+            
+            // Handle both English commas and Chinese full-width commas
+            const names = text.split(/[,，]\s*/);
+            
+            // Trim spaces and filter empty entries
+            return names
+                .map(name => name.trim())
+                .filter(name => name !== '');
+        }
+
+        // Format player name: keep original formatting (no capitalization for Chinese names)
+        function formatPlayerName(name) {
+            if (!name || name.trim() === '') return '';
+            return name.trim();
+        }
+
+        // Export player names only
+        function exportPlayerNamesOnly() {
+            if (!gameSettings.allowedPlayers || gameSettings.allowedPlayers.length === 0) {
+                showNotification('No players to export', false);
                 return;
             }
             
-            // Add options to select dropdown
-            backgroundImages.forEach((image, index) => {
-                const option = document.createElement('option');
-                option.value = image.url;
-                option.textContent = image.name;
-                if (gameSettings.bgImage === image.url) {
-                    option.selected = true;
+            // Sort alphabetically before export
+            const sortedPlayers = [...gameSettings.allowedPlayers].sort((a, b) => 
+                a.name.localeCompare(b.name, 'zh-Hans-CN')
+            );
+            
+            // Create CSV with only names
+            const names = sortedPlayers.map(player => player.name);
+            const csvContent = names.join('\n');
+            
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `mx-bingo-names-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification(`Exported ${names.length} player names`);
+        }
+
+        // Export full player details
+        function exportFullPlayerDetails() {
+            const playersRef = database.ref('players');
+            playersRef.once('value').then(snapshot => {
+                if (!snapshot.exists()) {
+                    showNotification('No registered players to export', false);
+                    return;
                 }
-                backgroundImageSelect.appendChild(option);
                 
-                // Add to preview gallery
-                const backgroundItem = document.createElement('div');
-                backgroundItem.className = `background-item ${gameSettings.bgImage === image.url ? 'active' : ''}`;
-                backgroundItem.dataset.index = index;
-                backgroundItem.innerHTML = `
-                    <img src="${image.url}" alt="${image.name}" loading="lazy">
-                    <div class="background-item-overlay">
-                        <span class="background-item-name">${image.name}</span>
-                        <button class="background-item-delete" data-index="${index}">
+                const players = [];
+                snapshot.forEach(child => {
+                    const player = child.val();
+                    players.push({
+                        name: player.name,
+                        luckyNumber: player.luckyNumber,
+                        joinedAt: player.joinedAt
+                    });
+                });
+                
+                // Sort alphabetically by name
+                players.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+                
+                // Create CSV with full details
+                const headers = ['No.', 'Name', '4D No.', 'Login Date', 'Time'];
+                const rows = players.map((player, index) => {
+                    const datetime = formatDateTime(player.joinedAt);
+                    return [
+                        index + 1,
+                        player.name,
+                        player.luckyNumber,
+                        datetime.date,
+                        datetime.time
+                    ];
+                });
+                
+                const csvContent = [
+                    headers.join(','),
+                    ...rows.map(row => row.join(','))
+                ].join('\n');
+                
+                // Create and download file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `mx-bingo-registered-players-${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showNotification(`Exported ${players.length} registered players`);
+            });
+        }
+
+        // Check for duplicate names
+        function findDuplicateNames(names) {
+            const formattedNames = names.map(name => formatPlayerName(name).toLowerCase());
+            const currentNames = gameSettings.allowedPlayers.map(player => 
+                player.name.toLowerCase()
+            );
+            
+            const duplicates = [];
+            formattedNames.forEach((name, index) => {
+                if (currentNames.includes(name)) {
+                    duplicates.push(names[index]);
+                }
+            });
+            
+            return duplicates;
+        }
+
+        // Render BINGO card grid
+        function renderBingoGrid(card, container, isPreview = false) {
+            container.innerHTML = '';
+            
+            // Apply cell spacing from settings
+            container.style.gap = `${gameSettings.cellSpacing}px`;
+            
+            // Add card cells (25 cells total - NO BINGO headers)
+            for (let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = card[i];
+                cell.dataset.index = i;
+                
+                if (card[i] === 'FREE') {
+                    cell.classList.add('free');
+                }
+                
+                // Apply cell number styling
+                cell.style.color = gameSettings.cellNumberColor;
+                cell.style.fontSize = `${gameSettings.cellNumberSize}px`;
+                
+                // For player cards, add click event to mark cells
+                if (!isPreview) {
+                    cell.addEventListener('click', function() {
+                        if (!this.classList.contains('free')) {
+                            this.classList.toggle('marked');
+                            // Save marked state to Firebase
+                            saveMarkedState(i, this.classList.contains('marked'));
+                        }
+                    });
+                }
+                
+                container.appendChild(cell);
+            }
+            
+            // Apply cell styling from settings
+            applyCellStyling();
+        }
+
+        // Save marked state to Firebase
+        function saveMarkedState(cellIndex, isMarked) {
+            if (!currentUser || isAdmin) return;
+            
+            const playerRef = database.ref('players/' + currentUser.id);
+            playerRef.child('cards/' + currentCardIndex + '/marked/' + cellIndex).set(isMarked);
+        }
+
+        // Load marked state from Firebase
+        function loadMarkedState(card, markedData) {
+            if (!markedData) return card;
+            
+            // Apply marked state to cells in the grid
+            const cells = document.querySelectorAll('#bingoGrid .cell');
+            Object.keys(markedData).forEach(cellIndex => {
+                if (markedData[cellIndex] && cells[cellIndex]) {
+                    cells[cellIndex].classList.add('marked');
+                }
+            });
+            
+            return card;
+        }
+
+        // Clear current card marks
+        async function clearCurrentCard() {
+            if (!currentUser || isAdmin) return;
+            
+            // Use custom confirmation dialog instead of browser alert
+            const confirmed = await showConfirmationDialog('Clear all marks from this card? This cannot be undone.');
+            
+            if (confirmed) {
+                const playerRef = database.ref('players/' + currentUser.id);
+                // Clear marked state for current card
+                await playerRef.child('cards/' + currentCardIndex + '/marked').remove();
+                
+                // Clear visual marks
+                const cells = document.querySelectorAll('#bingoGrid .cell');
+                cells.forEach(cell => {
+                    if (!cell.classList.contains('free')) {
+                        cell.classList.remove('marked');
+                    }
+                });
+                
+                showNotification('Card cleared successfully');
+            }
+        }
+
+        // Apply cell styling from settings
+        function applyCellStyling() {
+            const cells = document.querySelectorAll('.cell:not(.cell-header)');
+            
+            cells.forEach(cell => {
+                cell.style.backgroundColor = gameSettings.cellColor;
+                cell.style.border = gameSettings.cellBorder;
+                cell.style.color = gameSettings.cellNumberColor;
+                cell.style.fontSize = `${gameSettings.cellNumberSize}px`;
+            });
+            
+            // Apply grid spacing
+            const grids = document.querySelectorAll('.bingo-grid');
+            grids.forEach(grid => {
+                grid.style.gap = `${gameSettings.cellSpacing}px`;
+            });
+            
+            // Apply background color
+            document.body.style.background = `linear-gradient(135deg, ${gameSettings.bgColor} 0%, ${adjustColor(gameSettings.bgColor, -20)} 100%)`;
+            
+            // Apply player name styling
+            gamePlayerName.style.color = gameSettings.playerNameColor;
+            gamePlayerName.style.fontSize = `${gameSettings.playerNameSize}px`;
+        }
+
+        // Helper to adjust color brightness
+        function adjustColor(hex, percent) {
+            const num = parseInt(hex.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            
+            return "#" + (
+                0x1000000 + 
+                (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 + 
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 + 
+                (B < 255 ? B < 1 ? 0 : B : 255)
+            ).toString(16).slice(1);
+        }
+
+        // Update player count display
+        function updatePlayerCount() {
+            const count = gameSettings.allowedPlayers ? gameSettings.allowedPlayers.length : 0;
+            playerCount.textContent = `${count} player${count !== 1 ? 's' : ''}`;
+        }
+
+        // Update card navigation and title
+        function updateCardNavigation() {
+            const totalCards = playerCards.length;
+            
+            // Update card title with custom format
+            const cardTitleText = gameSettings.cardTitleText
+                .replace('{current}', currentCardIndex + 1)
+                .replace('{total}', totalCards);
+            cardTitle.textContent = cardTitleText;
+            
+            prevCardBtn.disabled = currentCardIndex === 0;
+            nextCardBtn.disabled = currentCardIndex === totalCards - 1;
+            
+            // Render current card
+            renderBingoGrid(playerCards[currentCardIndex].numbers, bingoGrid);
+            
+            // Load marked state if available
+            if (playerCards[currentCardIndex].marked) {
+                loadMarkedState(playerCards[currentCardIndex].numbers, playerCards[currentCardIndex].marked);
+            }
+        }
+
+        // Show notification
+        function showNotification(message, isSuccess = true) {
+            notificationText.textContent = message;
+            notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
+            notification.classList.remove('hidden');
+            
+            // Update icon based on success/error
+            const icon = notification.querySelector('i');
+            icon.className = isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Check if player is in allowed list
+        function isPlayerAllowed(playerName) {
+            const formattedName = formatPlayerName(playerName);
+            return gameSettings.allowedPlayers.some(player => 
+                player.name.toLowerCase() === formattedName.toLowerCase()
+            );
+        }
+
+        // Load registered players and display in table (alphabetically sorted)
+        async function loadRegisteredPlayersTable() {
+            const playersRef = database.ref('players');
+            const snapshot = await playersRef.once('value');
+            
+            registeredPlayersTableContainer.innerHTML = '';
+            
+            if (!snapshot.exists()) {
+                registeredPlayersTableContainer.innerHTML = '<div class="no-players-message">No players registered yet</div>';
+                return;
+            }
+            
+            const players = [];
+            snapshot.forEach(child => {
+                const player = child.val();
+                players.push({
+                    name: player.name,
+                    luckyNumber: player.luckyNumber,
+                    joinedAt: player.joinedAt
+                });
+            });
+            
+            // Sort alphabetically by name
+            players.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+            
+            // Create table
+            const table = document.createElement('table');
+            table.className = 'registered-players-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">No.</th>
+                        <th>Name</th>
+                        <th style="width: 80px;">4D No.</th>
+                        <th style="width: 100px;">Login Date</th>
+                        <th style="width: 80px;">Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${players.map((player, index) => {
+                        const datetime = formatDateTime(player.joinedAt);
+                        return `
+                            <tr>
+                                <td class="player-number">${index + 1}.</td>
+                                <td class="player-name-cell">${player.name}</td>
+                                <td class="player-lucky-number">${player.luckyNumber}</td>
+                                <td class="player-date">${datetime.date}</td>
+                                <td class="player-time">${datetime.time}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            `;
+            
+            registeredPlayersTableContainer.appendChild(table);
+        }
+
+        // Login function (combined for both player and admin)
+        loginBtn.addEventListener('click', async function() {
+            const playerName = document.getElementById('playerName').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!playerName) {
+                showNotification('Please enter your name', false);
+                return;
+            }
+            
+            if (!password) {
+                showNotification('Please enter password', false);
+                return;
+            }
+            
+            // Check if it's admin login
+            if (playerName.toLowerCase() === gameSettings.adminId.toLowerCase() && password === gameSettings.adminPassword) {
+                // Admin login
+                isAdmin = true;
+                currentUser = { name: 'Admin' };
+                
+                // Show admin panel and header
+                loginScreen.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                adminHeader.classList.remove('hidden');
+                adminTabs.classList.remove('hidden');
+                gameStatus.classList.remove('hidden');
+                
+                // Load settings from Firebase
+                loadSettings();
+                
+                // Load player list
+                loadRegisteredPlayersTable();
+                
+                // Generate preview card
+                const previewCard = generateBingoCard();
+                renderBingoGrid(previewCard, previewGrid, true);
+                
+                showNotification('Admin login successful');
+                return;
+            }
+            
+            // Regular player login
+            const formattedName = formatPlayerName(playerName);
+            
+            // Check if game is active
+            if (!gameSettings.gameActive) {
+                showNotification('Game is not active. Cannot login.', false);
+                return;
+            }
+            
+            // Check if player is in allowed list
+            if (!isPlayerAllowed(formattedName)) {
+                showNotification('Player not in allowed list. Please contact admin.', false);
+                return;
+            }
+            
+            // Check password (non-case sensitive, using general password)
+            if (password.toLowerCase() !== gameSettings.generalPassword.toLowerCase()) {
+                showNotification('Incorrect password', false);
+                return;
+            }
+            
+            // Check if player exists in Firebase
+            const playersRef = database.ref('players');
+            const snapshot = await playersRef.orderByChild('name').equalTo(formattedName).once('value');
+            
+            if (snapshot.exists()) {
+                // Player exists, login
+                let playerData;
+                snapshot.forEach(child => {
+                    playerData = child.val();
+                    playerData.id = child.key;
+                });
+                
+                // Login successful
+                currentUser = {
+                    id: playerData.id,
+                    name: formattedName,
+                    luckyNumber: playerData.luckyNumber
+                };
+                
+                // Load player cards
+                playerCards = playerData.cards || [];
+                
+                // If no cards exist, generate unique cards
+                if (playerCards.length === 0) {
+                    for (let i = 0; i < gameSettings.cardsPerPlayer; i++) {
+                        const uniqueCard = await generateUniqueBingoCard();
+                        playerCards.push({
+                            numbers: uniqueCard,
+                            marked: {}
+                        });
+                    }
+                    // Save to Firebase
+                    await playersRef.child(playerData.id).update({ cards: playerCards });
+                }
+                
+                // Show player screen with game header
+                loginScreen.classList.add('hidden');
+                playerScreen.classList.remove('hidden');
+                gameHeader.classList.remove('hidden');
+                
+                // Update game header (4D number on RIGHT side)
+                gamePlayerName.textContent = formattedName;
+                gameLuckyNumber.textContent = playerData.luckyNumber;
+                
+                // Apply player name styling
+                gamePlayerName.style.color = gameSettings.playerNameColor;
+                gamePlayerName.style.fontSize = `${gameSettings.playerNameSize}px`;
+                
+                // Update card navigation
+                currentCardIndex = 0;
+                updateCardNavigation();
+                
+                // Setup real-time listener for marked state changes
+                setupPlayerMarkedListener();
+                
+                showNotification(`Welcome back, ${formattedName}!`);
+            } else {
+                // Create new player
+                const luckyNumber = generateLuckyNumber();
+                const newPlayer = {
+                    name: formattedName,
+                    luckyNumber: luckyNumber,
+                    joinedAt: new Date().toISOString(),
+                    cards: []
+                };
+                
+                // Generate unique cards for the player
+                for (let i = 0; i < gameSettings.cardsPerPlayer; i++) {
+                    const uniqueCard = await generateUniqueBingoCard();
+                    newPlayer.cards.push({
+                        numbers: uniqueCard,
+                        marked: {}
+                    });
+                }
+                
+                // Save to Firebase
+                const newPlayerRef = await playersRef.push(newPlayer);
+                
+                // Set current user
+                currentUser = {
+                    id: newPlayerRef.key,
+                    name: formattedName,
+                    luckyNumber: luckyNumber
+                };
+                
+                playerCards = newPlayer.cards;
+                
+                // Show player screen with game header
+                loginScreen.classList.add('hidden');
+                playerScreen.classList.remove('hidden');
+                gameHeader.classList.remove('hidden');
+                
+                // Update game header (4D number on RIGHT side)
+                gamePlayerName.textContent = formattedName;
+                gameLuckyNumber.textContent = luckyNumber;
+                
+                // Apply player name styling
+                gamePlayerName.style.color = gameSettings.playerNameColor;
+                gamePlayerName.style.fontSize = `${gameSettings.playerNameSize}px`;
+                
+                // Update card navigation
+                currentCardIndex = 0;
+                updateCardNavigation();
+                
+                // Setup real-time listener for marked state changes
+                setupPlayerMarkedListener();
+                
+                showNotification(`Welcome to MX BINGO, ${formattedName}! Your lucky number is ${luckyNumber}`);
+            }
+        });
+
+        // Initialize color pickers
+        function initializeColorPickers() {
+            // Create color palettes
+            function createColorPalette(container, colors, defaultColor) {
+                container.innerHTML = '';
+                colors.forEach(color => {
+                    const swatch = document.createElement('div');
+                    swatch.className = 'color-swatch';
+                    swatch.style.backgroundColor = color;
+                    swatch.title = color;
+                    swatch.addEventListener('click', () => {
+                        updateColorPreview(color, container);
+                    });
+                    container.appendChild(swatch);
+                });
+            }
+            
+            // Initialize palettes
+            createColorPalette(playerNameColorPalette, colorPalettes.textColors, gameSettings.playerNameColor);
+            createColorPalette(cellColorPalette, colorPalettes.cellColors, gameSettings.cellColor);
+            createColorPalette(cellNumberColorPalette, colorPalettes.textColors, gameSettings.cellNumberColor);
+            createColorPalette(bgColorPalette, colorPalettes.bgColors, gameSettings.bgColor);
+            
+            // Set up color picker interactions
+            function setupColorPicker(preview, input, picker, updateCallback) {
+                // Click preview to show color picker
+                preview.addEventListener('click', () => {
+                    picker.click();
+                });
+                
+                // Color picker change
+                picker.addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    preview.style.backgroundColor = color;
+                    input.value = color;
+                    if (updateCallback) updateCallback(color);
+                });
+                
+                // Input change
+                input.addEventListener('change', (e) => {
+                    const color = e.target.value;
+                    if (/^#[0-9A-F]{6}$/i.test(color)) {
+                        preview.style.backgroundColor = color;
+                        if (updateCallback) updateCallback(color);
+                    }
+                });
+            }
+
+            // Setup welcome line text inputs
+            welcomeLine1Text.addEventListener('input', (e) => {
+                gameSettings.welcomeLine1Text = e.target.value;
+                updateWelcomeTextStyle();
+            });
+
+            welcomeLine2Text.addEventListener('input', (e) => {
+                gameSettings.welcomeLine2Text = e.target.value;
+                updateWelcomeTextStyle();
+            });
+
+            welcomeLine3Text.addEventListener('input', (e) => {
+                gameSettings.welcomeLine3Text = e.target.value;
+                updateWelcomeTextStyle();
+            });
+
+            // Setup welcome line color pickers
+            setupColorPicker(
+                welcomeLine1ColorPreview,
+                welcomeLine1ColorInput,
+                welcomeLine1ColorPicker,
+                (color) => {
+                    gameSettings.welcomeLine1Color = color;
+                    updateWelcomeTextStyle();
+                }
+            );
+
+            welcomeLine1Size.addEventListener('input', (e) => {
+                gameSettings.welcomeLine1Size = parseInt(e.target.value) || 28;
+                updateWelcomeTextStyle();
+            });
+
+            setupColorPicker(
+                welcomeLine2ColorPreview,
+                welcomeLine2ColorInput,
+                welcomeLine2ColorPicker,
+                (color) => {
+                    gameSettings.welcomeLine2Color = color;
+                    updateWelcomeTextStyle();
+                }
+            );
+
+            welcomeLine2Size.addEventListener('input', (e) => {
+                gameSettings.welcomeLine2Size = parseInt(e.target.value) || 42;
+                updateWelcomeTextStyle();
+            });
+
+            setupColorPicker(
+                welcomeLine3ColorPreview,
+                welcomeLine3ColorInput,
+                welcomeLine3ColorPicker,
+                (color) => {
+                    gameSettings.welcomeLine3Color = color;
+                    updateWelcomeTextStyle();
+                }
+            );
+
+            welcomeLine3Size.addEventListener('input', (e) => {
+                gameSettings.welcomeLine3Size = parseInt(e.target.value) || 32;
+                updateWelcomeTextStyle();
+            });
+            
+            // Setup each color picker
+            setupColorPicker(
+                playerNameColorPreview,
+                playerNameColorInput,
+                playerNameColorPicker,
+                (color) => {
+                    gameSettings.playerNameColor = color;
+                    playerNameColorInput.value = color;
+                    playerNameColorPreview.style.backgroundColor = color;
+                }
+            );
+            
+            setupColorPicker(
+                cellColorPreview,
+                cellColorInput,
+                cellColorPicker,
+                (color) => {
+                    gameSettings.cellColor = color;
+                    cellColorInput.value = color;
+                    cellColorPreview.style.backgroundColor = color;
+                }
+            );
+            
+            setupColorPicker(
+                cellNumberColorPreview,
+                cellNumberColorInput,
+                cellNumberColorPicker,
+                (color) => {
+                    gameSettings.cellNumberColor = color;
+                    cellNumberColorInput.value = color;
+                    cellNumberColorPreview.style.backgroundColor = color;
+                }
+            );
+            
+            setupColorPicker(
+                bgColorPreview,
+                bgColorInput,
+                bgColorPicker,
+                (color) => {
+                    gameSettings.bgColor = color;
+                    bgColorInput.value = color;
+                    bgColorPreview.style.backgroundColor = color;
+                }
+            );
+        }
+        
+        // Update color preview
+        function updateColorPreview(color, palette, preview, input) {
+            if (preview) preview.style.backgroundColor = color;
+            if (input) input.value = color;
+            
+            // Highlight selected color in palette
+            if (palette) {
+                const swatches = palette.querySelectorAll('.color-swatch');
+                swatches.forEach(swatch => {
+                    swatch.style.border = swatch.style.backgroundColor === color ? 
+                        '2px solid #FF6B35' : '2px solid rgba(255, 255, 255, 0.1)';
+                });
+            }
+        }
+
+        // Load settings from Firebase
+        async function loadSettings() {
+            const settingsRef = database.ref('settings');
+            const snapshot = await settingsRef.once('value');
+            
+            if (snapshot.exists()) {
+                const loadedSettings = snapshot.val();
+                gameSettings = { ...gameSettings, ...loadedSettings };
+                
+                // Update UI with loaded settings
+                maxPlayersInput.value = gameSettings.maxPlayers;
+                cardsPerPlayerInput.value = gameSettings.cardsPerPlayer;
+                gameActiveSelect.value = gameSettings.gameActive.toString();
+                cellNumberSizeInput.value = gameSettings.cellNumberSize || 16;
+                cellSpacingInput.value = gameSettings.cellSpacing || 8;
+                cellBorderInput.value = gameSettings.cellBorder || "2px solid #4361ee";
+                headerTextInput.value = gameSettings.headerText || "MX BINGO";
+                cardTitleTextInput.value = gameSettings.cardTitleText || "GAME CARD {current}/{total}";
+                generalPasswordInput.value = gameSettings.generalPassword || "bingo123";
+                adminIdInput.value = gameSettings.adminId || "admin";
+                adminPasswordInput.value = gameSettings.adminPassword || "1234";
+                playerNameSizeInput.value = gameSettings.playerNameSize || 35;
+                
+                // Update welcome line settings
+                welcomeLine1Text.value = gameSettings.welcomeLine1Text || "Welcome to";
+                welcomeLine1ColorInput.value = gameSettings.welcomeLine1Color || "#ffffff";
+                welcomeLine1ColorPreview.style.backgroundColor = gameSettings.welcomeLine1Color || "#ffffff";
+                welcomeLine1ColorPicker.value = gameSettings.welcomeLine1Color || "#ffffff";
+                welcomeLine1Size.value = gameSettings.welcomeLine1Size || 28;
+
+                welcomeLine2Text.value = gameSettings.welcomeLine2Text || "MX";
+                welcomeLine2ColorInput.value = gameSettings.welcomeLine2Color || "#FF6B35";
+                welcomeLine2ColorPreview.style.backgroundColor = gameSettings.welcomeLine2Color || "#FF6B35";
+                welcomeLine2ColorPicker.value = gameSettings.welcomeLine2Color || "#FF6B35";
+                welcomeLine2Size.value = gameSettings.welcomeLine2Size || 42;
+
+                welcomeLine3Text.value = gameSettings.welcomeLine3Text || "BINGO!";
+                welcomeLine3ColorInput.value = gameSettings.welcomeLine3Color || "#06D6A0";
+                welcomeLine3ColorPreview.style.backgroundColor = gameSettings.welcomeLine3Color || "#06D6A0";
+                welcomeLine3ColorPicker.value = gameSettings.welcomeLine3Color || "#06D6A0";
+                welcomeLine3Size.value = gameSettings.welcomeLine3Size || 32;
+                
+                // Update color inputs
+                playerNameColorInput.value = gameSettings.playerNameColor || "#ffffff";
+                playerNameColorPreview.style.backgroundColor = gameSettings.playerNameColor || "#ffffff";
+                playerNameColorPicker.value = gameSettings.playerNameColor || "#ffffff";
+                
+                cellColorInput.value = gameSettings.cellColor || "#4361ee";
+                cellColorPreview.style.backgroundColor = gameSettings.cellColor || "#4361ee";
+                cellColorPicker.value = gameSettings.cellColor || "#4361ee";
+                
+                cellNumberColorInput.value = gameSettings.cellNumberColor || "#ffffff";
+                cellNumberColorPreview.style.backgroundColor = gameSettings.cellNumberColor || "#ffffff";
+                cellNumberColorPicker.value = gameSettings.cellNumberColor || "#ffffff";
+                
+                bgColorInput.value = gameSettings.bgColor || "#1a1a2e";
+                bgColorPreview.style.backgroundColor = gameSettings.bgColor || "#1a1a2e";
+                bgColorPicker.value = gameSettings.bgColor || "#1a1a2e";
+                
+                // Update displayed texts
+                headerTitle.textContent = gameSettings.headerText || "MX BINGO";
+                updateWelcomeTextStyle();
+                
+                // Update game status indicator
+                updateGameStatusIndicator();
+                
+                // Initialize color pickers
+                initializeColorPickers();
+                
+                // Apply styling
+                applyCellStyling();
+                
+                // Render player list editor
+                renderPlayerListEditor();
+                updatePlayerCount();
+            }
+        }
+
+        // Render player list editor
+        function renderPlayerListEditor() {
+            playerListEditor.innerHTML = '';
+            
+            if (!gameSettings.allowedPlayers || gameSettings.allowedPlayers.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.textContent = 'No players added yet. Click "Add Player" to add players.';
+                emptyMessage.style.color = 'rgba(255, 255, 255, 0.5)';
+                emptyMessage.style.textAlign = 'center';
+                emptyMessage.style.padding = '20px';
+                playerListEditor.appendChild(emptyMessage);
+                updatePlayerCount();
+                return;
+            }
+            
+            // Sort allowed players alphabetically
+            gameSettings.allowedPlayers.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+            
+            gameSettings.allowedPlayers.forEach((player, index) => {
+                const playerItem = document.createElement('div');
+                playerItem.className = 'player-list-item';
+                playerItem.innerHTML = `
+                    <input type="text" value="${player.name}" data-index="${index}" placeholder="Player Name">
+                    <div class="player-list-controls">
+                        <button class="remove-player" data-index="${index}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 `;
-                backgroundPreview.appendChild(backgroundItem);
-                
-                // Add click event to select this background
-                backgroundItem.addEventListener('click', function(e) {
-                    if (!e.target.closest('.background-item-delete')) {
-                        selectBackgroundImage(index);
-                    }
-                });
-                
-                // Add delete event
-                const deleteBtn = backgroundItem.querySelector('.background-item-delete');
-                deleteBtn.addEventListener('click', function(e) {
-                    e.stopPropagation();
+                playerListEditor.appendChild(playerItem);
+            });
+            
+            // Add event listeners for remove buttons
+            document.querySelectorAll('.remove-player').forEach(button => {
+                button.addEventListener('click', function() {
                     const index = parseInt(this.getAttribute('data-index'));
-                    deleteBackgroundImage(index);
+                    removePlayerFromList(index);
                 });
             });
-        }
-
-        // Select a background image
-        function selectBackgroundImage(index) {
-            if (backgroundImages[index]) {
-                gameSettings.bgImage = backgroundImages[index].url;
-                gameSettings.bgType = "image";
-                
-                // Update UI
-                backgroundImageSelect.value = gameSettings.bgImage;
-                
-                // Update active state in preview
-                document.querySelectorAll('.background-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                document.querySelectorAll('.background-item')[index].classList.add('active');
-                
-                // Update background type selector
-                document.querySelectorAll('.background-type-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector('.background-type-btn[data-type="image"]').classList.add('active');
-                colorBackgroundSettings.style.display = 'none';
-                imageBackgroundSettings.style.display = 'block';
-                
-                // Apply background
-                applyBackground();
-                
-                // Save settings
-                saveSettings();
-                
-                showNotification(`Background image "${backgroundImages[index].name}" selected`);
-            }
-        }
-
-        // Delete a background image
-        function deleteBackgroundImage(index) {
-            if (confirm(`Delete "${backgroundImages[index].name}"? This cannot be undone.`)) {
-                // If this was the active background, clear it
-                if (gameSettings.bgImage === backgroundImages[index].url) {
-                    gameSettings.bgImage = "";
-                    gameSettings.bgType = "color";
-                    backgroundImageSelect.value = "";
-                    
-                    // Switch back to color background
-                    document.querySelectorAll('.background-type-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    document.querySelector('.background-type-btn[data-type="color"]').classList.add('active');
-                    colorBackgroundSettings.style.display = 'block';
-                    imageBackgroundSettings.style.display = 'none';
-                    
-                    applyBackground();
-                }
-                
-                backgroundImages.splice(index, 1);
-                saveBackgroundImages();
-                updateBackgroundSelection();
-                saveSettings();
-                
-                showNotification('Background image deleted');
-            }
-        }
-
-        // Handle background upload
-        backgroundUploadArea.addEventListener('click', function() {
-            backgroundUploadInput.click();
-        });
-
-        backgroundUploadInput.addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                uploadBackgroundImage(e.target.files[0]);
-            }
-        });
-
-        // Upload background image
-        function uploadBackgroundImage(file) {
-            // Validate file
-            const maxSize = 5 * 1024 * 1024; // 5MB
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             
-            if (file.size > maxSize) {
-                showNotification('File size must be less than 5MB', false);
-                return;
-            }
-            
-            if (!allowedTypes.includes(file.type)) {
-                showNotification('Only JPG, PNG, GIF, and WebP images are allowed', false);
-                return;
-            }
-            
-            // Show upload progress
-            uploadProgress.style.display = 'block';
-            uploadProgressBar.style.width = '0%';
-            
-            // For Netlify deployment, we'll use a simple approach
-            // In a real implementation, you'd use Netlify Functions to handle uploads
-            
-            // Simulate upload progress
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 10;
-                uploadProgressBar.style.width = `${progress}%`;
-                
-                if (progress >= 90) {
-                    clearInterval(progressInterval);
-                    
-                    // Create a local URL for the image (for demo purposes)
-                    // In production, you would upload to Netlify's storage or a CDN
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        // Add the image to our collection
-                        const imageData = {
-                            name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-                            url: e.target.result,
-                            size: file.size,
-                            type: file.type,
-                            uploadedAt: new Date().toISOString()
-                        };
-                        
-                        backgroundImages.push(imageData);
-                        saveBackgroundImages();
-                        updateBackgroundSelection();
-                        
-                        // Complete progress bar
-                        uploadProgressBar.style.width = '100%';
-                        setTimeout(() => {
-                            uploadProgress.style.display = 'none';
-                        }, 1000);
-                        
-                        showNotification(`Background "${imageData.name}" uploaded successfully`);
-                        
-                        // For Netlify Forms (optional - would need server-side processing)
-                        // To actually upload to Netlify, you'd need to:
-                        // 1. Set up a Netlify form with file upload
-                        // 2. Use the Netlify Forms API
-                        // 3. Or use Netlify Functions with a storage service
-                        
-                        // For now, we're storing images locally in localStorage
-                        // Note: localStorage has size limits, so for production,
-                        // you should use a proper storage solution
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }, 100);
-        }
-
-        // Background type selector
-        backgroundTypeSelector.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const type = this.getAttribute('data-type');
-                
-                // Update active button
-                backgroundTypeSelector.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Show appropriate settings
-                if (type === 'color') {
-                    colorBackgroundSettings.style.display = 'block';
-                    imageBackgroundSettings.style.display = 'none';
-                    gameSettings.bgType = "color";
-                    applyBackground();
-                } else {
-                    colorBackgroundSettings.style.display = 'none';
-                    imageBackgroundSettings.style.display = 'block';
-                    gameSettings.bgType = "image";
-                    applyBackground();
-                }
-                
-                saveSettings();
-            });
-        });
-
-        // Background image selection change
-        backgroundImageSelect.addEventListener('change', function() {
-            gameSettings.bgImage = this.value;
-            
-            if (gameSettings.bgImage) {
-                gameSettings.bgType = "image";
-                
-                // Update active state in preview
-                document.querySelectorAll('.background-item').forEach((item, index) => {
-                    if (backgroundImages[index] && backgroundImages[index].url === gameSettings.bgImage) {
-                        item.classList.add('active');
-                    } else {
-                        item.classList.remove('active');
+            // Add event listeners for input changes
+            document.querySelectorAll('#playerListEditor input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    const newName = this.value.trim();
+                    if (newName) {
+                        updatePlayerInList(index, newName);
                     }
                 });
-                
-                // Update background type selector
-                document.querySelectorAll('.background-type-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector('.background-type-btn[data-type="image"]').classList.add('active');
-                colorBackgroundSettings.style.display = 'none';
-                imageBackgroundSettings.style.display = 'block';
-            } else {
-                gameSettings.bgType = "color";
-            }
+            });
             
-            applyBackground();
-            saveSettings();
-        });
-
-        // Apply background based on settings
-        function applyBackground() {
-            if (gameSettings.bgType === "color") {
-                document.body.style.background = `linear-gradient(135deg, ${gameSettings.bgColor} 0%, ${adjustColor(gameSettings.bgColor, -20)} 100%)`;
-                document.body.style.backgroundImage = 'none';
-            } else if (gameSettings.bgType === "image" && gameSettings.bgImage) {
-                document.body.style.background = `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url("${gameSettings.bgImage}")`;
-                document.body.style.backgroundSize = 'cover';
-                document.body.style.backgroundPosition = 'center';
-                document.body.style.backgroundAttachment = 'fixed';
-                document.body.style.backgroundRepeat = 'no-repeat';
-            } else {
-                // Fallback to color
-                document.body.style.background = `linear-gradient(135deg, ${gameSettings.bgColor} 0%, ${adjustColor(gameSettings.bgColor, -20)} 100%)`;
-                document.body.style.backgroundImage = 'none';
-            }
-        }
-
-        // Save settings to localStorage (replacing Firebase)
-        async function saveSettings() {
-            localStorage.setItem('mxbingo_settings', JSON.stringify(gameSettings));
-            
-            // If admin, also update the displayed texts
-            if (isAdmin) {
-                headerTitle.textContent = gameSettings.headerText;
-                welcomeText.textContent = gameSettings.welcomeText;
-            }
-            
-            showNotification('Settings saved successfully!');
-        }
-
-        // Load settings from localStorage (replacing Firebase)
-        async function loadSettings() {
-            const storedSettings = localStorage.getItem('mxbingo_settings');
-            if (storedSettings) {
-                const loadedSettings = JSON.parse(storedSettings);
-                gameSettings = { ...gameSettings, ...loadedSettings };
-                
-                // Update UI with loaded settings
-                updateSettingsUI();
-                
-                // Apply styling
-                applyCellStyling();
-                applyBackground();
-            }
-        }
-
-        // Update settings UI (replacing Firebase version)
-        function updateSettingsUI() {
-            if (!isAdmin) return;
-            
-            maxPlayersInput.value = gameSettings.maxPlayers;
-            cardsPerPlayerInput.value = gameSettings.cardsPerPlayer;
-            gameActiveSelect.value = gameSettings.gameActive.toString();
-            cellNumberSizeInput.value = gameSettings.cellNumberSize || 16;
-            cellSpacingInput.value = gameSettings.cellSpacing || 8;
-            cellBorderInput.value = gameSettings.cellBorder || "2px solid #4361ee";
-            headerTextInput.value = gameSettings.headerText || "MX BINGO";
-            welcomeTextInput.value = gameSettings.welcomeText || "Welcome to MX BINGO!";
-            cardTitleTextInput.value = gameSettings.cardTitleText || "GAME CARD {current}/{total}";
-            generalPasswordInput.value = gameSettings.generalPassword || "bingo123";
-            adminIdInput.value = gameSettings.adminId || "admin";
-            adminPasswordInput.value = gameSettings.adminPassword || "1234";
-            playerNameSizeInput.value = gameSettings.playerNameSize || 35;
-            
-            // Update color inputs
-            playerNameColorInput.value = gameSettings.playerNameColor || "#ffffff";
-            playerNameColorPreview.style.backgroundColor = gameSettings.playerNameColor || "#ffffff";
-            playerNameColorPicker.value = gameSettings.playerNameColor || "#ffffff";
-            
-            cellColorInput.value = gameSettings.cellColor || "#4361ee";
-            cellColorPreview.style.backgroundColor = gameSettings.cellColor || "#4361ee";
-            cellColorPicker.value = gameSettings.cellColor || "#4361ee";
-            
-            cellNumberColorInput.value = gameSettings.cellNumberColor || "#ffffff";
-            cellNumberColorPreview.style.backgroundColor = gameSettings.cellNumberColor || "#ffffff";
-            cellNumberColorPicker.value = gameSettings.cellNumberColor || "#ffffff";
-            
-            bgColorInput.value = gameSettings.bgColor || "#1a1a2e";
-            bgColorPreview.style.backgroundColor = gameSettings.bgColor || "#1a1a2e";
-            bgColorPicker.value = gameSettings.bgColor || "#1a1a2e";
-            
-            // Update background type
-            if (gameSettings.bgType === "image") {
-                document.querySelectorAll('.background-type-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector('.background-type-btn[data-type="image"]').classList.add('active');
-                colorBackgroundSettings.style.display = 'none';
-                imageBackgroundSettings.style.display = 'block';
-                backgroundImageSelect.value = gameSettings.bgImage || "";
-            } else {
-                document.querySelectorAll('.background-type-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector('.background-type-btn[data-type="color"]').classList.add('active');
-                colorBackgroundSettings.style.display = 'block';
-                imageBackgroundSettings.style.display = 'none';
-            }
-            
-            // Update displayed texts
-            headerTitle.textContent = gameSettings.headerText || "MX BINGO";
-            welcomeText.textContent = gameSettings.welcomeText || "Welcome to MX BINGO!";
-            
-            // Update game status indicator
-            updateGameStatusIndicator();
-            
-            // Initialize color pickers
-            initializeColorPickers();
-            
-            // Render player list editor
-            renderPlayerListEditor();
             updatePlayerCount();
-            
-            // Update background selection
-            updateBackgroundSelection();
         }
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load settings and background images
-            loadSettings();
-            loadBackgroundImages();
-            
-            // Generate a sample preview card
-            const previewCard = generateBingoCard();
-            if (previewGrid) {
-                renderBingoGrid(previewCard, previewGrid, true);
-            }
-            
-            // Initialize color pickers
-            initializeColorPickers();
-            
-            // Add initial player to list if empty
+        // Check if player name already exists in the list
+        function isPlayerNameDuplicate(name) {
             if (!gameSettings.allowedPlayers || gameSettings.allowedPlayers.length === 0) {
-                gameSettings.allowedPlayers = [
-                    { name: "Player 1", luckyNumber: generateLuckyNumber() },
-                    { name: "Player 2", luckyNumber: generateLuckyNumber() },
-                    { name: "Player 3", luckyNumber: generateLuckyNumber() }
-                ];
-                saveSettings();
+                return false;
             }
             
-            // Set admin secret for Netlify form (optional)
-            adminSecretInput.value = gameSettings.adminPassword;
-        });
+            const formattedName = formatPlayerName(name);
+            return gameSettings.allowedPlayers.some(player => 
+                player.name.toLowerCase() === formattedName.toLowerCase()
+            );
+        }
 
-        // Update the save settings button event listener
+        // Add player to list - FIXED: check for duplicates
+        function addPlayerToList() {
+            if (!gameSettings.allowedPlayers) {
+                gameSettings.allowedPlayers = [];
+            }
+            
+            let baseName = "Player";
+            let playerNumber = gameSettings.allowedPlayers.length + 1;
+            let newName = `${baseName} ${playerNumber}`;
+            
+            // Find a unique name
+            while (isPlayerNameDuplicate(newName)) {
+                playerNumber++;
+                newName = `${baseName} ${playerNumber}`;
+            }
+            
+            const newPlayer = {
+                name: newName,
+                luckyNumber: generateLuckyNumber()
+            };
+            
+            gameSettings.allowedPlayers.push(newPlayer);
+            // Sort alphabetically after adding
+            gameSettings.allowedPlayers.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+            renderPlayerListEditor();
+            
+            showNotification(`Added player: ${newName}`);
+        }
+
+        // Update player in list
+        function updatePlayerInList(index, newName) {
+            if (gameSettings.allowedPlayers && gameSettings.allowedPlayers[index]) {
+                const formattedName = formatPlayerName(newName);
+                
+                // Check for duplicates (excluding the current player being edited)
+                const isDuplicate = gameSettings.allowedPlayers.some((player, i) => 
+                    i !== index && player.name.toLowerCase() === formattedName.toLowerCase()
+                );
+                
+                if (isDuplicate) {
+                    showNotification(`Player name "${formattedName}" already exists!`, false);
+                    // Revert to original name
+                    const originalName = gameSettings.allowedPlayers[index].name;
+                    document.querySelector(`#playerListEditor input[data-index="${index}"]`).value = originalName;
+                    return;
+                }
+                
+                gameSettings.allowedPlayers[index].name = formattedName;
+                // Sort alphabetically after updating
+                gameSettings.allowedPlayers.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+                renderPlayerListEditor();
+            }
+        }
+
+        // Remove player from list
+        function removePlayerFromList(index) {
+            if (gameSettings.allowedPlayers && gameSettings.allowedPlayers[index]) {
+                const playerName = gameSettings.allowedPlayers[index].name;
+                gameSettings.allowedPlayers.splice(index, 1);
+                renderPlayerListEditor();
+                showNotification(`Removed player: ${playerName}`);
+            }
+        }
+
+        // Import players from text
+        function importPlayersFromText() {
+            importTextarea.value = '';
+            duplicateWarning.classList.add('hidden');
+            importModal.classList.remove('hidden');
+        }
+
+        // Show duplicate warning
+        function showDuplicateWarning(duplicates) {
+            duplicateWarning.innerHTML = `
+                <strong><i class="fas fa-exclamation-triangle"></i> Found ${duplicates.length} duplicate name${duplicates.length !== 1 ? 's' : ''}:</strong>
+                <ul>
+                    ${duplicates.map(name => `<li>${formatPlayerName(name)}</li>`).join('')}
+                </ul>
+                <div style="margin-top: 8px;">
+                    Choose "Proceed" to import other names (skip duplicates) or "Cancel All" to cancel entire import.
+                </div>
+            `;
+            duplicateWarning.classList.remove('hidden');
+        }
+
+        // Process import - FIXED: properly handles Chinese names
+        function processImport(skipDuplicates = false) {
+            const importText = importTextarea.value.trim();
+            if (!importText) {
+                showNotification('Please enter names to import', false);
+                return;
+            }
+            
+            const names = parseCommaSeparatedNames(importText);
+            if (names.length === 0) {
+                showNotification('No valid names found', false);
+                return;
+            }
+            
+            const duplicates = findDuplicateNames(names);
+            
+            if (duplicates.length > 0 && !skipDuplicates) {
+                showDuplicateWarning(duplicates);
+                return;
+            }
+            
+            // Filter out duplicates if skipping
+            const uniqueNames = skipDuplicates 
+                ? names.filter(name => {
+                    const formattedName = formatPlayerName(name);
+                    return !gameSettings.allowedPlayers.some(player => 
+                        player.name.toLowerCase() === formattedName.toLowerCase()
+                    );
+                })
+                : names;
+            
+            if (uniqueNames.length === 0) {
+                showNotification('No new names to add (all names already exist)', false);
+                importModal.classList.add('hidden');
+                return;
+            }
+            
+            // Add new players
+            const addedPlayers = [];
+            uniqueNames.forEach(name => {
+                const formattedName = formatPlayerName(name);
+                gameSettings.allowedPlayers.push({
+                    name: formattedName,
+                    luckyNumber: generateLuckyNumber()
+                });
+                addedPlayers.push(formattedName);
+            });
+            
+            // Sort alphabetically after import
+            gameSettings.allowedPlayers.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+            renderPlayerListEditor();
+            importModal.classList.add('hidden');
+            
+            const playerCount = addedPlayers.length;
+            showNotification(`Successfully added ${playerCount} new player${playerCount !== 1 ? 's' : ''}`);
+        }
+
+        // Update game status indicator
+        function updateGameStatusIndicator() {
+            if (gameSettings.gameActive) {
+                statusIndicator.className = 'status-indicator status-active';
+                statusIndicator.innerHTML = '<i class="fas fa-circle"></i><span>Game Active - Join Open</span>';
+            } else {
+                statusIndicator.className = 'status-indicator status-inactive';
+                statusIndicator.innerHTML = '<i class="fas fa-circle"></i><span>Game Not Active - Join Closed</span>';
+            }
+        }
+
+        // Save settings to Firebase
         saveSettingsBtn.addEventListener('click', async function() {
             // Update gameSettings object
             gameSettings = {
@@ -791,10 +2823,16 @@
                 cellSpacing: parseInt(cellSpacingInput.value),
                 cellBorder: cellBorderInput.value,
                 bgColor: bgColorInput.value,
-                bgType: gameSettings.bgType || "color",
-                bgImage: gameSettings.bgImage || "",
                 headerText: headerTextInput.value,
-                welcomeText: welcomeTextInput.value,
+                welcomeLine1Text: welcomeLine1Text.value,
+                welcomeLine1Color: welcomeLine1ColorInput.value,
+                welcomeLine1Size: parseInt(welcomeLine1Size.value) || 28,
+                welcomeLine2Text: welcomeLine2Text.value,
+                welcomeLine2Color: welcomeLine2ColorInput.value,
+                welcomeLine2Size: parseInt(welcomeLine2Size.value) || 42,
+                welcomeLine3Text: welcomeLine3Text.value,
+                welcomeLine3Color: welcomeLine3ColorInput.value,
+                welcomeLine3Size: parseInt(welcomeLine3Size.value) || 32,
                 cardTitleText: cardTitleTextInput.value,
                 generalPassword: generalPasswordInput.value,
                 adminId: adminIdInput.value,
@@ -804,18 +2842,265 @@
                 allowedPlayers: gameSettings.allowedPlayers || []
             };
             
-            // Save to localStorage
-            await saveSettings();
+            // Save to Firebase
+            await database.ref('settings').set(gameSettings);
+            
+            // Update displayed texts
+            headerTitle.textContent = gameSettings.headerText;
+            updateWelcomeTextStyle();
+            
+            // Update game status indicator
+            updateGameStatusIndicator();
             
             // Apply styling
             applyCellStyling();
-            applyBackground();
             
             showNotification('All settings saved successfully!');
         });
 
-        // ... (rest of existing JavaScript functions remain the same, 
-        // but replace Firebase references with localStorage where needed)
+        // Reset all players
+        resetPlayersBtn.addEventListener('click', async function() {
+            if (await showConfirmationDialog('Are you sure you want to reset all players? This will remove ALL registered player data including their marked cards.')) {
+                await database.ref('players').remove();
+                loadRegisteredPlayersTable();
+                showNotification('All players have been reset');
+            }
+        });
+
+        // Clear current card button
+        clearCardBtn.addEventListener('click', function() {
+            clearCurrentCard();
+        });
+
+        // Add player button - FIXED: checks for duplicates
+        addPlayerBtn.addEventListener('click', function() {
+            addPlayerToList();
+        });
+
+        // Import players button
+        importPlayersBtn.addEventListener('click', function() {
+            importPlayersFromText();
+        });
+
+        // Export players button (allowed list)
+        exportPlayersBtn.addEventListener('click', function() {
+            exportPlayerNamesOnly();
+        });
+
+        // Export names only button (registered players)
+        exportNamesBtn.addEventListener('click', function() {
+            exportPlayerNamesOnly();
+        });
+
+        // Export full details button (registered players)
+        exportFullBtn.addEventListener('click', function() {
+            exportFullPlayerDetails();
+        });
+
+        // Import modal buttons
+        cancelImportBtn.addEventListener('click', function() {
+            importModal.classList.add('hidden');
+        });
+
+        proceedImportBtn.addEventListener('click', function() {
+            processImport(true);
+        });
+
+        cancelAllImportBtn.addEventListener('click', function() {
+            importModal.classList.add('hidden');
+        });
+
+        // Card navigation - Remember marked numbers when switching cards
+        prevCardBtn.addEventListener('click', function() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                updateCardNavigation();
+            }
+        });
+
+        nextCardBtn.addEventListener('click', function() {
+            if (currentCardIndex < playerCards.length - 1) {
+                currentCardIndex++;
+                updateCardNavigation();
+            }
+        });
+
+        // Admin logout
+        adminLogoutBtn.addEventListener('click', function() {
+            isAdmin = false;
+            currentUser = null;
+            
+            adminPanel.classList.add('hidden');
+            adminHeader.classList.add('hidden');
+            adminTabs.classList.add('hidden');
+            gameStatus.classList.add('hidden');
+            loginScreen.classList.remove('hidden');
+            
+            // Clear login form
+            document.getElementById('playerName').value = '';
+            document.getElementById('password').value = '';
+            
+            showNotification('Admin logged out');
+        });
+
+        // Firebase real-time listeners - settings changes
+        database.ref('settings').on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const loadedSettings = snapshot.val();
+                gameSettings = { ...gameSettings, ...loadedSettings };
+                
+                // Update displayed texts for everyone
+                headerTitle.textContent = gameSettings.headerText || "MX BINGO";
+                updateWelcomeTextStyle();
+                
+                // Apply styling for everyone
+                applyCellStyling();
+                
+                // Update game status indicator if visible
+                if (gameStatus && !gameStatus.classList.contains('hidden')) {
+                    updateGameStatusIndicator();
+                }
+                
+                // Update player game screen if visible
+                if (playerScreen && !playerScreen.classList.contains('hidden')) {
+                    // Update card title with current settings
+                    const totalCards = playerCards.length;
+                    const cardTitleText = gameSettings.cardTitleText
+                        .replace('{current}', currentCardIndex + 1)
+                        .replace('{total}', totalCards);
+                    cardTitle.textContent = cardTitleText;
+                    
+                    // Apply player name styling
+                    gamePlayerName.style.color = gameSettings.playerNameColor;
+                    gamePlayerName.style.fontSize = `${gameSettings.playerNameSize}px`;
+                    
+                    // Show game status indicator for players
+                    gameStatus.classList.remove('hidden');
+                    updateGameStatusIndicator();
+                }
+                
+                // Update admin panel if visible
+                if (adminPanel && !adminPanel.classList.contains('hidden')) {
+                    // Update UI with loaded settings
+                    maxPlayersInput.value = gameSettings.maxPlayers;
+                    cardsPerPlayerInput.value = gameSettings.cardsPerPlayer;
+                    gameActiveSelect.value = gameSettings.gameActive.toString();
+                    cellNumberSizeInput.value = gameSettings.cellNumberSize || 16;
+                    cellSpacingInput.value = gameSettings.cellSpacing || 8;
+                    cellBorderInput.value = gameSettings.cellBorder || "2px solid #4361ee";
+                    headerTextInput.value = gameSettings.headerText || "MX BINGO";
+                    cardTitleTextInput.value = gameSettings.cardTitleText || "GAME CARD {current}/{total}";
+                    generalPasswordInput.value = gameSettings.generalPassword || "bingo123";
+                    adminIdInput.value = gameSettings.adminId || "admin";
+                    adminPasswordInput.value = gameSettings.adminPassword || "1234";
+                    playerNameSizeInput.value = gameSettings.playerNameSize || 35;
+                    
+                    // Update welcome line settings
+                    welcomeLine1Text.value = gameSettings.welcomeLine1Text || "Welcome to";
+                    welcomeLine1ColorInput.value = gameSettings.welcomeLine1Color || "#ffffff";
+                    welcomeLine1ColorPreview.style.backgroundColor = gameSettings.welcomeLine1Color || "#ffffff";
+                    welcomeLine1Size.value = gameSettings.welcomeLine1Size || 28;
+
+                    welcomeLine2Text.value = gameSettings.welcomeLine2Text || "MX";
+                    welcomeLine2ColorInput.value = gameSettings.welcomeLine2Color || "#FF6B35";
+                    welcomeLine2ColorPreview.style.backgroundColor = gameSettings.welcomeLine2Color || "#FF6B35";
+                    welcomeLine2Size.value = gameSettings.welcomeLine2Size || 42;
+
+                    welcomeLine3Text.value = gameSettings.welcomeLine3Text || "BINGO!";
+                    welcomeLine3ColorInput.value = gameSettings.welcomeLine3Color || "#06D6A0";
+                    welcomeLine3ColorPreview.style.backgroundColor = gameSettings.welcomeLine3Color || "#06D6A0";
+                    welcomeLine3Size.value = gameSettings.welcomeLine3Size || 32;
+                    
+                    // Update color inputs
+                    playerNameColorInput.value = gameSettings.playerNameColor || "#ffffff";
+                    playerNameColorPreview.style.backgroundColor = gameSettings.playerNameColor || "#ffffff";
+                    
+                    cellColorInput.value = gameSettings.cellColor || "#4361ee";
+                    cellColorPreview.style.backgroundColor = gameSettings.cellColor || "#4361ee";
+                    
+                    cellNumberColorInput.value = gameSettings.cellNumberColor || "#ffffff";
+                    cellNumberColorPreview.style.backgroundColor = gameSettings.cellNumberColor || "#ffffff";
+                    
+                    bgColorInput.value = gameSettings.bgColor || "#1a1a2e";
+                    bgColorPreview.style.backgroundColor = gameSettings.bgColor || "#1a1a2e";
+                    
+                    // Update game status indicator
+                    updateGameStatusIndicator();
+                    
+                    // Render player list editor
+                    renderPlayerListEditor();
+                    updatePlayerCount();
+                    
+                    // Update preview
+                    updateWelcomeTextStyle();
+                }
+            }
+        });
+
+        // Setup real-time listener for marked state changes
+        function setupPlayerMarkedListener() {
+            if (currentUser && !isAdmin) {
+                database.ref('players/' + currentUser.id + '/cards').on('value', (snapshot) => {
+                    if (snapshot.exists()) {
+                        const cardsData = snapshot.val();
+                        playerCards = cardsData;
+                        
+                        // Update current card if needed
+                        if (playerCards[currentCardIndex]) {
+                            renderBingoGrid(playerCards[currentCardIndex].numbers, bingoGrid);
+                            
+                            // Load marked state if available
+                            if (playerCards[currentCardIndex].marked) {
+                                loadMarkedState(playerCards[currentCardIndex].numbers, playerCards[currentCardIndex].marked);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generate a sample preview card
+            const previewCard = generateBingoCard();
+            if (previewGrid) {
+                renderBingoGrid(previewCard, previewGrid, true);
+            }
+            
+            // Initialize color pickers
+            initializeColorPickers();
+            
+            // Check Firebase connection
+            testFirebaseConnection();
+            
+            // Add initial player to list if empty
+            if (!gameSettings.allowedPlayers || gameSettings.allowedPlayers.length === 0) {
+                gameSettings.allowedPlayers = [
+                    { name: "Player 1", luckyNumber: generateLuckyNumber() },
+                    { name: "Player 2", luckyNumber: generateLuckyNumber() },
+                    { name: "Player 3", luckyNumber: generateLuckyNumber() }
+                ];
+            }
+            
+            // Apply welcome text styling
+            updateWelcomeTextStyle();
+        });
+
+        // Test Firebase connection
+        async function testFirebaseConnection() {
+            try {
+                const testRef = database.ref('connectionTest');
+                await testRef.set({
+                    timestamp: new Date().toISOString(),
+                    message: 'MX BINGO connected successfully',
+                    project: 'mx-bingo'
+                });
+                console.log('✅ Firebase connection successful for MX BINGO');
+            } catch (error) {
+                console.error('❌ Firebase connection error:', error);
+                showNotification('Firebase connection issue. Check your API key.', false);
+            }
+        }
     </script>
 </body>
 </html>
